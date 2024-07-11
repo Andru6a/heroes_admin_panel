@@ -1,19 +1,18 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { useHttp } from '../../hooks/http.hook';
-import { heroesNew } from '../heroesList/heroesSlice';
+import { useSelector } from 'react-redux';
 import { filterSelector } from '../heroesFilters/filterSlice';
+import { useCreateHeroeMutation } from '../../api/apiSlice';
 
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { v4 as uuidv4 } from 'uuid';
 
 const HeroesAddForm = () => {
-  const dispatch = useDispatch();
-  const { request } = useHttp();
   const filters = useSelector(filterSelector);
   const filtersLoadingStatus = useSelector(
     (state) => state.filters.filtersLoadingStatus
   );
+
+  const [createHero, { isLoading }] = useCreateHeroeMutation();
 
   const renderOptionsList = (filters, status) => {
     if (status === 'loading') {
@@ -38,10 +37,8 @@ const HeroesAddForm = () => {
     let id = uuidv4();
     const newHero = { id, ...values };
 
-    request('http://localhost:3001/heroes', 'POST', JSON.stringify(newHero))
-      .then((res) => console.log(res, 'Отправка успешна'))
-      .then(dispatch(heroesNew(newHero)))
-      .catch((err) => console.log(err))
+    createHero(newHero)
+      .unwrap()
       .finally(() => {
         setSubmitting(false);
         resetForm();
